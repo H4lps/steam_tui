@@ -16,7 +16,7 @@ struct Game {
 }
 
 impl App { 
-    pub fn new(
+    //pub fn new()
 
 
     //Loading game on cold start
@@ -45,14 +45,14 @@ impl App {
 
         for line in content.lines() {
             let parts : Vec<&str> = line
-                .split('""')
+                .split('"')
                 .filter(|s| !s.trim().is_empty())
                 .collect();
             
             if parts.len() >= 2 {
                 match parts[0] {
                    "appid" => app_id = parts[1]::parse<u32>()
-                        .expect("Steam manifest contains an invalid appid)",
+                        .expect("Steam manifest contains an invalid appid"),
                     "name" => {
                         let name = parts[1].to_string()
                                 .expect("Invalid conversion to string");
@@ -73,7 +73,7 @@ impl App {
         Ok(Game {
             app_id: app_id,
             name: name.unwrap_or_else("InvalidName".to_string()),
-            installdir: name.unwrap_or_else("InvalidInstallDir".to_string(),
+            installdir: name.unwrap_or_else("InvalidInstallDir".to_string()),
         })
     }
         
