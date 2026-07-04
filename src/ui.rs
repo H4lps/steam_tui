@@ -1,6 +1,9 @@
 
+use ratatui::widgets::{Paragraph, Block};
+use ratatui::Frame;
+use crate::app::App;
 
-fn ui(frame: &mut Frame, app: &App) {
+pub fn ui(frame: &mut Frame, _app: &App) {
     let area = frame.area();
 
     let block = Block::bordered()
