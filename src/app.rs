@@ -5,7 +5,7 @@ use std::fs;
 pub struct App {
     steam_path : PathBuf,
     selected_index: usize,
-    games: Vec<Game>,
+    games: Vec<Result<Game,std::io::Error>>,
     search: String,
     should_quit: bool,
 }
@@ -54,12 +54,12 @@ impl App {
         }
 
         //Manifest Parsing
-        fn parse_acf(path: &PathBuf) -> io::Result<Game> {
+        fn parse_acf(path: &PathBuf) -> Result<Game> {
         let content = fs::read_to_string(path)?;
         
-        let mut app_id = None;
-        let mut name = None;
-        let mut install_dir = None;
+        let mut app_id : Option<u32>  = None;
+        let mut name : Option<String> = None;
+        let mut install_dir : Option<PathBuf> = None;
 
         for line in content.lines() {
             let parts : Vec<&str> = line
@@ -69,12 +69,9 @@ impl App {
             
             if parts.len() >= 2 {
                 match parts[0] {
-                   "appid" => app_id = parts[1].parse::<u32>()
-                        .expect("Steam manifest contains an invalid appid"),
+                   "appid" => app_id = parts[1].parse::<u32>().ok(),
                     "name" => {
                         let name = parts[1].to_string()
-                                .expect("Invalid conversion to string");
-
                         if name.to_lowercase().conatins("steam") {
                             continue;
                         }
@@ -83,17 +80,26 @@ impl App {
                     },
                     "installdir" => install_dir = Some(parts[1].to_string()),
                 }
-
             }
         }
 
+        let app_id = app_id.ok_or_else(|| {
+            io::Error::new(io::ErrorKind::InvalidData, "Parse or Missing")
+        })?;
+
+        let name = name.ok_or_else(|| {
+            io::Error::new(io::ErrorKind::InvalidData, "missing name")
+        })?;
+
+        let install_dir = install_dir.ok_or_else(|| {
+            io::Error::new(io::ErrorKind::InvalidData, "missing installdir")
+        })?;
+
 
         Ok(Game {
-            app_id: app_id.unwrap_or(6767),
-            name: name.unwrap_or_else(|| "InvalidName".to_string()),
-            install_dir: name
-                .unwrap_or_else(|| "InvalidInstallDir".to_string())
-                .into(),
+            app_id: app_id,
+            name: name,
+            install_dir: install_dir,
         })
     }
         
