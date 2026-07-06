@@ -5,7 +5,7 @@ use crate::app::App;
 
 pub fn ui(frame: &mut Frame, _app: &App) {
     let area = frame.area();
-
+    let _games = _app.games();
     let block = Block::bordered()
         .title("My TUI");
 
@@ -13,4 +13,8 @@ pub fn ui(frame: &mut Frame, _app: &App) {
         .block(block);
 
     frame.render_widget(paragraph, area);
+}
+
+fn draw_game(block: &block, name: &str) {
+    
 }

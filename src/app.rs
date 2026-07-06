@@ -13,7 +13,7 @@ pub struct App {
 }
 
 #[allow(dead_code)]
-struct Game {
+pub struct Game {
     app_id: u32,
     name: String,
     install_dir: PathBuf,
@@ -100,6 +100,10 @@ impl App {
                 name: name,
                 install_dir: install_dir,
             })
+    }
+
+    pub fn games(&self) -> &[Game] {
+         &self.games
     }
         
 

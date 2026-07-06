@@ -40,6 +40,7 @@ fn main() -> std::io::Result<()> {
             ui(frame,&steam);
         })?;     
     }
+
     ratatui::restore();
     Ok(())
 }
