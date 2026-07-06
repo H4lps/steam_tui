@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::io;
 use std::fs;
-
+use std::error::Error;
 pub struct App {
     steam_path : PathBuf,
     selected_index: usize,
@@ -54,53 +54,55 @@ impl App {
         }
 
         //Manifest Parsing
-        fn parse_acf(path: &PathBuf) -> Result<Game> {
-        let content = fs::read_to_string(path)?;
+        fn parse_acf(path: &PathBuf) -> Result<Game,Box<dyn Error> > {
+            let content = fs::read_to_string(path)?;
         
-        let mut app_id : Option<u32>  = None;
-        let mut name : Option<String> = None;
-        let mut install_dir : Option<PathBuf> = None;
+            let mut app_id : Option<u32>  = None;
+            let mut name : Option<String> = None;
+            let mut install_dir : Option<PathBuf> = None;
 
-        for line in content.lines() {
-            let parts : Vec<&str> = line
-                .split('"')
-                .filter(|s| !s.trim().is_empty())
-                .collect();
-            
-            if parts.len() >= 2 {
-                match parts[0] {
-                   "appid" => app_id = parts[1].parse::<u32>().ok(),
-                    "name" => {
-                        let name = parts[1].to_string()
-                        if name.to_lowercase().conatins("steam") {
-                            continue;
-                        }
+            for line in content.lines() {
+                let parts : Vec<&str> = line
+                    .split('"')
+                    .filter(|s| !s.trim().is_empty())
+                    .collect();
+                
+                if parts.len() >= 2 {
+                    match parts[0] {
+                       "appid" => app_id = parts[1].parse::<u32>().ok(),
+                        "name" => {
+                            let name = parts[1].to_string();
+                            if name.to_lowercase().contains("steam") {
+                                continue;
+                            }
 
-                        Some(name)
-                    },
-                    "installdir" => install_dir = Some(parts[1].to_string()),
+                            Some(name)
+                        },
+                        "installdir" => install_dir = Some(
+                            PathBuf::from(parts[1].to_string())
+                        ),
+                    }
                 }
             }
-        }
 
-        let app_id = app_id.ok_or_else(|| {
-            io::Error::new(io::ErrorKind::InvalidData, "Parse or Missing")
-        })?;
+            let app_id = app_id.ok_or_else(|| {
+                io::Error::new(io::ErrorKind::InvalidData, "Parse or Missing")
+            })?;
 
-        let name = name.ok_or_else(|| {
-            io::Error::new(io::ErrorKind::InvalidData, "missing name")
-        })?;
+            let name = name.ok_or_else(|| {
+                io::Error::new(io::ErrorKind::InvalidData, "missing name")
+            })?;
 
-        let install_dir = install_dir.ok_or_else(|| {
-            io::Error::new(io::ErrorKind::InvalidData, "missing installdir")
-        })?;
+            let install_dir = install_dir.ok_or_else(|| {
+                io::Error::new(io::ErrorKind::InvalidData, "missing installdir")
+            })?;
 
 
-        Ok(Game {
-            app_id: app_id,
-            name: name,
-            install_dir: install_dir,
-        })
+            Ok(Game {
+                app_id: app_id,
+                name: name,
+                install_dir: install_dir,
+            })
     }
         
 
