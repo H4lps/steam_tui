@@ -118,4 +118,7 @@ impl Game {
             install_dir,
         }
     }
+    pub fn name(&self) -> &str {
+        &self.name
+    }
 }
