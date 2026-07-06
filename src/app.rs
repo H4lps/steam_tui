@@ -1,15 +1,18 @@
 use std::path::PathBuf;
 use std::io;
 use std::fs;
-use std::error::Error;
+
+
+#[allow(dead_code)]
 pub struct App {
     steam_path : PathBuf,
     selected_index: usize,
-    games: Vec<Result<Game,std::io::Error>>,
+    games: Vec<Game>,
     search: String,
     should_quit: bool,
 }
 
+#[allow(dead_code)]
 struct Game {
     app_id: u32,
     name: String,
@@ -38,7 +41,7 @@ impl App {
 
     //Loading game on cold start
         fn find_valid_steam_games(path: PathBuf)
-            -> io::Result<Vec<io::Result<Game>>> {
+            -> Result<Vec<Game>, io::Error> {
             let mut games = Vec::new();
      
             for entry in fs::read_dir(path)? {
@@ -47,14 +50,14 @@ impl App {
 
                 if path.extension().and_then(|s| s.to_str()) == Some("acf") {
                     let game = Self::parse_acf(&path)?;
-                    games.push(Ok(game));   
+                    games.push(game);   
                 }
             }
             Ok(games)
         }
 
         //Manifest Parsing
-        fn parse_acf(path: &PathBuf) -> Result<Game,Box<dyn Error> > {
+        fn parse_acf(path: &PathBuf) -> io::Result<Game > {
             let content = fs::read_to_string(path)?;
         
             let mut app_id : Option<u32>  = None;
@@ -70,17 +73,11 @@ impl App {
                 if parts.len() >= 2 {
                     match parts[0] {
                        "appid" => app_id = parts[1].parse::<u32>().ok(),
-                        "name" => {
-                            let name = parts[1].to_string();
-                            if name.to_lowercase().contains("steam") {
-                                continue;
-                            }
-
-                            Some(name)
-                        },
+                        "name" => name = Some(parts[1].to_string()),
                         "installdir" => install_dir = Some(
                             PathBuf::from(parts[1].to_string())
                         ),
+                        _ => {}
                     }
                 }
             }
@@ -109,7 +106,7 @@ impl App {
 }
 
 impl Game {
-
+    #[allow(dead_code)]
     pub fn new(app_id: u32, name: String, install_dir: PathBuf) -> Game{
         Self {
             app_id,
