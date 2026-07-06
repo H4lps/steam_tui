@@ -4,6 +4,8 @@ mod ui;
 use app::App;
 use ui::ui;
 use std::path::PathBuf;
+use crossterm::event::{self, Event, KeyCode, KeyModifiers};
+
 
 fn main() -> std::io::Result<()> {
     let mut terminal = ratatui::init();
@@ -20,12 +22,24 @@ fn main() -> std::io::Result<()> {
         selected_index,
         search,
         should_quit,
-    ).expect("Error initializing app object");
-    
-    terminal.draw(|frame| {
-        ui(frame,&steam);
-    })?;
+    )?;
 
+    
+
+    loop {    
+        //Base Case
+       if let Event::Key(key) = event::read()? {
+            if key.code == KeyCode::Char('c')
+                && key.modifiers.contains(KeyModifiers::CONTROL)
+            {
+                break;
+            }
+        }
+
+        terminal.draw(|frame| {
+            ui(frame,&steam);
+        })?;     
+    }
     ratatui::restore();
     Ok(())
 }
